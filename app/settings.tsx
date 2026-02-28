@@ -1,7 +1,8 @@
 import { useAppStore } from '@/store/useAppStore';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function SettingsScreen() {
@@ -29,23 +30,50 @@ export default function SettingsScreen() {
     const [isContactVisible, setContactVisible] = useState(false);
     const [contactMessage, setContactMessage] = useState('');
 
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                const dataStr = await AsyncStorage.getItem('userData');
+                if (dataStr) {
+                    const data = JSON.parse(dataStr);
+                    if (data.fullName && userName === 'Guest') setUserName(data.fullName);
+                    if (data.email && userEmail === 'guest@bloomy.com') setUserEmail(data.email);
+                }
+            } catch (e) {
+                console.error('Failed to load user data', e);
+            }
+        };
+        loadUserData();
+    }, []);
+
     const openEditProfile = () => {
         setEditName(userName);
         setEditEmail(userEmail);
         setEditProfileVisible(true);
     };
 
-    const handleSaveProfile = () => {
+    const handleSaveProfile = async () => {
         if (!editName || !editEmail) {
             Alert.alert("Error", "Please fill out all fields.");
             return;
         }
         setUserName(editName);
         setUserEmail(editEmail);
+
+        try {
+            const dataStr = await AsyncStorage.getItem('userData');
+            let data = dataStr ? JSON.parse(dataStr) : {};
+            data.fullName = editName;
+            data.email = editEmail;
+            await AsyncStorage.setItem('userData', JSON.stringify(data));
+        } catch (e) {
+            console.error('Failed to save user data', e);
+        }
+
         setEditProfileVisible(false);
     };
 
-    const handleSavePassword = () => {
+    const handleSavePassword = async () => {
         if (!currentPassword || !newPassword || !confirmPassword) {
             Alert.alert("Error", "Please fill out all fields.");
             return;
@@ -54,6 +82,24 @@ export default function SettingsScreen() {
             Alert.alert("Error", "New passwords do not match.");
             return;
         }
+
+        try {
+            const dataStr = await AsyncStorage.getItem('userData');
+            let data = dataStr ? JSON.parse(dataStr) : {};
+
+            if (data.password && data.password !== currentPassword) {
+                Alert.alert("Error", "Current password is incorrect.");
+                return;
+            }
+
+            data.password = newPassword;
+            await AsyncStorage.setItem('userData', JSON.stringify(data));
+        } catch (e) {
+            console.error('Failed to save new password', e);
+            Alert.alert("Error", "Failed to update password.");
+            return;
+        }
+
         setChangePasswordVisible(false);
         setCurrentPassword('');
         setNewPassword('');
@@ -115,7 +161,7 @@ export default function SettingsScreen() {
                             <Text style={styles.settingSubtitle}>Easier on your eyes</Text>
                         </View>
                         <Switch
-                            trackColor={{ false: "#EFE4E5", true: "#D1A3A6" }}
+                            trackColor={{ false: "#EFE4E5", true: "#AD6D71" }}
                             thumbColor={"#FFFFFF"}
                             ios_backgroundColor="#EFE4E5"
                             onValueChange={toggleDarkMode}
@@ -452,7 +498,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     saveButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         borderRadius: 28,
         height: 56,
         justifyContent: 'center',

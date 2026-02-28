@@ -1,86 +1,111 @@
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const ORDERS = [
-    {
-        id: 'ORD-2023-001',
-        date: '21 Feb 2026',
-        status: 'Delivered',
-        items: 2,
-        total: '$85.00',
-    },
-    {
-        id: 'ORD-2023-002',
-        date: '14 Feb 2026',
-        status: 'Delivered',
-        items: 1,
-        total: '$50.00',
-    },
-    {
-        id: 'ORD-2023-003',
-        date: '10 Jan 2026',
-        status: 'Cancelled',
-        items: 3,
-        total: '$120.00',
-    }
-];
+import { useAppStore } from '@/store/useAppStore';
 
 export default function OrdersScreen() {
     const router = useRouter();
+    const orders = useAppStore(state => state.orders);
+    const setOrders = useAppStore(state => state.setOrders);
+    const isDarkMode = useAppStore(state => state.isDarkMode);
+    const theme = isDarkMode ? darkTheme : lightTheme;
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const dataStr = await AsyncStorage.getItem('userData');
+                if (dataStr) {
+                    const data = JSON.parse(dataStr);
+                    if (data.orders) {
+                        setOrders(data.orders);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching orders from storage:', error);
+            }
+        };
+        fetchOrders();
+    }, []);
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, theme.container]}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Feather name="arrow-left" size={24} color="#150935" />
+                    <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>My Orders</Text>
+                <Text style={[styles.headerTitle, theme.text]}>My Orders</Text>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                {ORDERS.map((order) => (
-                    <View key={order.id} style={styles.orderCard}>
-                        <View style={styles.orderHeader}>
-                            <Text style={styles.orderId}>{order.id}</Text>
-                            <View style={[
-                                styles.statusBadge,
-                                order.status === 'Delivered' ? styles.statusDelivered : styles.statusCancelled
-                            ]}>
-                                <Text style={[
-                                    styles.statusText,
-                                    order.status === 'Delivered' ? styles.statusTextDelivered : styles.statusTextCancelled
-                                ]}>{order.status}</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.orderDetails}>
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Date:</Text>
-                                <Text style={styles.detailValue}>{order.date}</Text>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Items:</Text>
-                                <Text style={styles.detailValue}>{order.items}</Text>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Total Amount:</Text>
-                                <Text style={styles.detailTotal}>{order.total}</Text>
-                            </View>
-                        </View>
-
-                        <TouchableOpacity style={styles.actionButton}>
-                            <Text style={styles.actionButtonText}>
-                                {order.status === 'Delivered' ? 'Reorder' : 'View Details'}
-                            </Text>
+                {orders.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Feather name="package" size={64} color={isDarkMode ? '#2A2A2A' : '#F3E9EA'} style={styles.emptyIcon} />
+                        <Text style={[styles.emptyTitle, theme.text]}>No Orders Yet</Text>
+                        <Text style={styles.emptySubtitle}>You haven't placed any orders. Start checking out fresh flowers!</Text>
+                        <TouchableOpacity style={styles.shopButton} onPress={() => router.replace('/(tabs)')} activeOpacity={0.8}>
+                            <Text style={styles.shopButtonText}>Start Shopping</Text>
                         </TouchableOpacity>
                     </View>
-                ))}
+                ) : (
+                    orders.map((order) => (
+                        <View key={order.id} style={[styles.orderCard, theme.card]}>
+                            <View style={[styles.orderHeader, theme.borderBottom]}>
+                                <Text style={[styles.orderId, theme.text]}>{order.id}</Text>
+                                <View style={[
+                                    styles.statusBadge,
+                                    order.status === 'Delivered' ? styles.statusDelivered : styles.statusCancelled
+                                ]}>
+                                    <Text style={[
+                                        styles.statusText,
+                                        order.status === 'Delivered' ? styles.statusTextDelivered : styles.statusTextCancelled
+                                    ]}>{order.status}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.orderDetails}>
+                                <View style={styles.detailRow}>
+                                    <Text style={styles.detailLabel}>Date:</Text>
+                                    <Text style={[styles.detailValue, theme.text]}>{order.date}</Text>
+                                </View>
+                                <View style={styles.detailRow}>
+                                    <Text style={styles.detailLabel}>Items:</Text>
+                                    <Text style={[styles.detailValue, theme.text]}>{order.items}</Text>
+                                </View>
+                                <View style={styles.detailRow}>
+                                    <Text style={styles.detailLabel}>Total Amount:</Text>
+                                    <Text style={styles.detailTotal}>{order.total}</Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity style={styles.actionButton}>
+                                <Text style={styles.actionButtonText}>
+                                    {order.status === 'Delivered' ? 'Reorder' : 'View Details'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    ))
+                )}
             </ScrollView>
         </SafeAreaView>
     );
 }
+
+const darkTheme = StyleSheet.create({
+    container: { backgroundColor: '#121212' },
+    card: { backgroundColor: '#1E1E1E', shadowOpacity: 0 },
+    text: { color: '#FFFFFF' },
+    borderBottom: { borderBottomColor: '#2A2A2A' },
+});
+
+const lightTheme = StyleSheet.create({
+    container: { backgroundColor: '#FCF8F9' },
+    card: { backgroundColor: '#FFFFFF' },
+    text: { color: '#150935' },
+    borderBottom: { borderBottomColor: '#F3E9EA' },
+});
 
 const styles = StyleSheet.create({
     container: {
@@ -172,19 +197,54 @@ const styles = StyleSheet.create({
     },
     detailTotal: {
         fontSize: 14,
-        color: '#D1A3A6',
+        color: '#AD6D71',
         fontWeight: '700',
     },
     actionButton: {
         borderWidth: 1,
-        borderColor: '#D1A3A6',
+        borderColor: '#AD6D71',
         borderRadius: 24,
         paddingVertical: 10,
         alignItems: 'center',
     },
     actionButtonText: {
-        color: '#D1A3A6',
+        color: '#AD6D71',
         fontSize: 14,
+        fontWeight: '600',
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: 80,
+    },
+    emptyIcon: {
+        marginBottom: 24,
+    },
+    emptyTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#150935',
+        marginBottom: 8,
+    },
+    emptySubtitle: {
+        fontSize: 15,
+        color: '#AA949C',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 32,
+        paddingHorizontal: 20,
+    },
+    shopButton: {
+        backgroundColor: '#AD6D71',
+        paddingHorizontal: 32,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    shopButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
         fontWeight: '600',
     },
 });

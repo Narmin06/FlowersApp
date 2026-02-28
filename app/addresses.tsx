@@ -80,7 +80,7 @@ export default function AddressesScreen() {
                 {addresses.map((item) => (
                     <View key={item.id} style={styles.addressCard}>
                         <View style={styles.iconContainer}>
-                            <Feather name={item.type as any} size={20} color="#D1A3A6" />
+                            <Feather name={item.type as any} size={20} color="#AD6D71" />
                         </View>
 
                         <View style={styles.addressInfo}>
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     },
     defaultText: {
         fontSize: 10,
-        color: '#D1A3A6',
+        color: '#AD6D71',
         fontWeight: '600',
     },
     addressText: {
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     },
     addButton: {
         flexDirection: 'row',
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         borderRadius: 28,
         height: 56,
         justifyContent: 'center',
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
     },
     saveButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         borderRadius: 28,
         height: 56,
         justifyContent: 'center',

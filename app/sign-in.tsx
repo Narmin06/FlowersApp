@@ -1,4 +1,6 @@
+import { useAppStore } from '@/store/useAppStore';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -8,10 +10,40 @@ export default function SignInScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSignIn = () => {
-        // Navigate to home after sign in
-        router.replace('/(tabs)');
+    const setUserName = useAppStore(state => state.setUserName);
+    const setUserEmail = useAppStore(state => state.setUserEmail);
+
+    const handleSignIn = async () => {
+        if (!email.trim() || !password.trim()) {
+            setError('Please fill in all fields');
+            return;
+        }
+        setError('');
+
+        try {
+            const savedUserStr = await AsyncStorage.getItem('userData');
+            if (!savedUserStr) {
+                setError('No account found. Please sign up first.');
+                return;
+            }
+
+            const savedUser = JSON.parse(savedUserStr);
+            if (savedUser.email === email && savedUser.password === password) {
+                // Correct credentials
+                if (savedUser.fullName) setUserName(savedUser.fullName);
+                setUserEmail(savedUser.email);
+
+                // Navigate to home after sign in
+                router.replace('/(tabs)');
+            } else {
+                setError('Invalid email or password');
+            }
+        } catch (e) {
+            console.error('Failed to fetch user data', e);
+            setError('Something went wrong. Try again.');
+        }
     };
 
     return (
@@ -62,9 +94,7 @@ export default function SignInScreen() {
                             </View>
                         </View>
 
-                        <TouchableOpacity style={styles.forgotPassword}>
-                            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                        </TouchableOpacity>
+                        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                         <TouchableOpacity style={styles.signInButton} onPress={handleSignIn} activeOpacity={0.8}>
                             <Text style={styles.signInButtonText}>Sign In</Text>
@@ -78,17 +108,6 @@ export default function SignInScreen() {
                                 </TouchableOpacity>
                             </Link>
                         </View>
-
-                        <View style={styles.dividerContainer}>
-                            <View style={styles.divider} />
-                            <Text style={styles.dividerText}>Or continue with</Text>
-                            <View style={styles.divider} />
-                        </View>
-
-                        <TouchableOpacity style={styles.googleButton} activeOpacity={0.7}>
-                            <Text style={styles.googleIconText}>G</Text>
-                            <Text style={styles.googleButtonText}>Continue with Google</Text>
-                        </TouchableOpacity>
                     </View>
 
                 </ScrollView>
@@ -160,17 +179,8 @@ const styles = StyleSheet.create({
     eyeIcon: {
         padding: 4,
     },
-    forgotPassword: {
-        alignSelf: 'flex-end',
-        marginBottom: 24,
-    },
-    forgotPasswordText: {
-        color: '#D1A3A6',
-        fontSize: 14,
-        fontWeight: '500',
-    },
     signInButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         borderRadius: 28,
         height: 56,
         justifyContent: 'center',
@@ -192,44 +202,14 @@ const styles = StyleSheet.create({
         fontSize: 15,
     },
     signUpLink: {
-        color: '#D1A3A6',
+        color: '#AD6D71',
         fontSize: 15,
         fontWeight: '600',
     },
-    dividerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 32,
-    },
-    divider: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#F3E9EA',
-    },
-    dividerText: {
-        color: '#AA949C',
-        paddingHorizontal: 16,
+    errorText: {
+        color: '#FF3B30',
         fontSize: 14,
-    },
-    googleButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#FCF8F9',
-        borderWidth: 1,
-        borderColor: '#F3E9EA',
-        borderRadius: 28,
-        height: 56,
-    },
-    googleIconText: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#150935',
-        marginRight: 12,
-    },
-    googleButtonText: {
-        color: '#150935',
-        fontSize: 15,
-        fontWeight: '600',
+        textAlign: 'center',
+        marginBottom: 16,
     },
 });

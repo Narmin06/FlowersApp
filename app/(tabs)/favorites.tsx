@@ -38,10 +38,7 @@ export default function FavoritesScreen() {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.productInfo}>
-                    <View style={styles.deliveryRow}>
-                        <Feather name="truck" size={12} color="#1F9939" />
-                        <Text style={styles.deliveryText}>Free delivery</Text>
-                    </View>
+
                     <Text style={[styles.productName, theme.text]} numberOfLines={2}>{item.name}</Text>
 
                     <View style={styles.ratingRow}>
@@ -53,7 +50,7 @@ export default function FavoritesScreen() {
                         <Text style={styles.reviewCount}>(45k+)</Text>
                     </View>
 
-                    <Text style={styles.productPrice}>{item.price}</Text>
+                    <Text style={[styles.productPrice, theme.text]}>{item.price}</Text>
                 </View>
             </TouchableOpacity>
         );
@@ -236,7 +233,7 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     exploreButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         paddingHorizontal: 32,
         height: 56,
         borderRadius: 28,

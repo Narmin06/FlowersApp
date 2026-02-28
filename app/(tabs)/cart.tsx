@@ -1,5 +1,6 @@
 import { useAppStore } from '@/store/useAppStore';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -10,6 +11,7 @@ export default function CartScreen() {
     const updateQuantity = useAppStore(state => state.updateCartQuantity);
     const removeItem = useAppStore(state => state.removeFromCart);
     const clearCart = useAppStore(state => state.clearCart);
+    const addOrder = useAppStore(state => state.addOrder);
     const isDarkMode = useAppStore(state => state.isDarkMode);
 
     const theme = isDarkMode ? darkTheme : lightTheme;
@@ -26,10 +28,44 @@ export default function CartScreen() {
     const delivery = subtotal > 0 ? 5.00 : 0.00;
     const total = subtotal + delivery;
 
-    const handlePay = () => {
+    const openCheckoutModal = async () => {
+        try {
+            const dataStr = await AsyncStorage.getItem('userData');
+            if (dataStr) {
+                const data = JSON.parse(dataStr);
+                if (data.fullName) setCardName(data.fullName);
+            }
+        } catch (e) {
+            console.error('Failed to get user data', e);
+        }
+        setCheckoutModalVisible(true);
+    };
+
+    const handlePay = async () => {
         if (!cardNumber || !cardName || !expiry || !cvv) {
             Alert.alert("Error", "Please fill in all card details.");
             return;
+        }
+
+        const orderItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+        const newOrder = {
+            id: `ORD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+            date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+            status: 'Delivered',
+            items: orderItemsCount,
+            total: `${Math.round(total)} AZN`
+        };
+
+        addOrder(newOrder);
+
+        try {
+            const dataStr = await AsyncStorage.getItem('userData');
+            let data = dataStr ? JSON.parse(dataStr) : {};
+            const existingOrders = data.orders || [];
+            data.orders = [newOrder, ...existingOrders];
+            await AsyncStorage.setItem('userData', JSON.stringify(data));
+        } catch (error) {
+            console.error('Failed to save order history', error);
         }
 
         // Process payment mock
@@ -88,7 +124,7 @@ export default function CartScreen() {
 
                                 <View style={[styles.quantityContainer, { borderColor: isDarkMode ? '#2A2A2A' : '#F3E9EA' }]}>
                                     <TouchableOpacity
-                                        style={styles.quantityButton}
+                                        style={[styles.quantityButton, { backgroundColor: isDarkMode ? '#2A2A2A' : '#FCF3F5' }]}
                                         onPress={() => updateQuantity(item.id, -1)}
                                         activeOpacity={0.7}
                                     >
@@ -96,7 +132,7 @@ export default function CartScreen() {
                                     </TouchableOpacity>
                                     <Text style={[styles.quantityText, theme.text]}>{item.quantity}</Text>
                                     <TouchableOpacity
-                                        style={styles.quantityButton}
+                                        style={[styles.quantityButton, { backgroundColor: isDarkMode ? '#2A2A2A' : '#FCF3F5' }]}
                                         onPress={() => updateQuantity(item.id, 1)}
                                         activeOpacity={0.7}
                                     >
@@ -113,23 +149,23 @@ export default function CartScreen() {
                 <View style={[styles.footer, theme.card]}>
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Subtotal</Text>
-                        <Text style={[styles.summaryValue, theme.text]}>${subtotal.toFixed(2)}</Text>
+                        <Text style={[styles.summaryValue, theme.text]}>{Math.round(subtotal)} AZN</Text>
                     </View>
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Delivery</Text>
-                        <Text style={[styles.summaryValue, theme.text]}>${delivery.toFixed(2)}</Text>
+                        <Text style={[styles.summaryValue, theme.text]}>{Math.round(delivery)} AZN</Text>
                     </View>
                     <View style={[styles.divider, theme.divider]} />
                     <View style={[styles.summaryRow, styles.totalRow]}>
                         <Text style={styles.totalLabel}>Total</Text>
-                        <Text style={[styles.totalValue, theme.text]}>${total.toFixed(2)}</Text>
+                        <Text style={[styles.totalValue, theme.text]}>{Math.round(total)} AZN</Text>
                     </View>
 
                     <TouchableOpacity
                         style={[styles.checkoutButton, cartItems.length === 0 && styles.checkoutButtonDisabled]}
                         activeOpacity={0.8}
                         disabled={cartItems.length === 0}
-                        onPress={() => setCheckoutModalVisible(true)}
+                        onPress={openCheckoutModal}
                     >
                         <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
                     </TouchableOpacity>
@@ -174,12 +210,13 @@ export default function CartScreen() {
                             </View>
 
                             <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Cardholder Name</Text>
-                                <View style={styles.inputContainer}>
+                                <Text style={[styles.label, theme.text]}>Cardholder Name</Text>
+                                <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F3E9EA' }]}>
                                     <Feather name="user" size={20} color="#AA949C" style={styles.inputIcon} />
                                     <TextInput
-                                        style={styles.input}
-                                        placeholder="John Doe"
+                                        style={[styles.input, theme.text]}
+                                        placeholder="Your Name"
+                                        placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
                                         autoCapitalize="words"
                                         value={cardName}
                                         onChangeText={setCardName}
@@ -189,11 +226,12 @@ export default function CartScreen() {
 
                             <View style={styles.rowInputs}>
                                 <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                                    <Text style={styles.label}>Expiry Date</Text>
-                                    <View style={styles.inputContainer}>
+                                    <Text style={[styles.label, theme.text]}>Expiry Date</Text>
+                                    <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F3E9EA' }]}>
                                         <TextInput
-                                            style={styles.input}
+                                            style={[styles.input, theme.text]}
                                             placeholder="MM/YY"
+                                            placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
                                             maxLength={5}
                                             value={expiry}
                                             onChangeText={setExpiry}
@@ -202,11 +240,12 @@ export default function CartScreen() {
                                 </View>
 
                                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-                                    <Text style={styles.label}>CVV</Text>
-                                    <View style={styles.inputContainer}>
+                                    <Text style={[styles.label, theme.text]}>CVV</Text>
+                                    <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F3E9EA' }]}>
                                         <TextInput
-                                            style={styles.input}
+                                            style={[styles.input, theme.text]}
                                             placeholder="123"
+                                            placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
                                             keyboardType="numeric"
                                             maxLength={4}
                                             value={cvv}
@@ -218,8 +257,8 @@ export default function CartScreen() {
                             </View>
 
                             <View style={styles.modalTotalContainer}>
-                                <Text style={styles.modalTotalText}>Total to Pay:</Text>
-                                <Text style={styles.modalTotalAmount}>${total.toFixed(2)}</Text>
+                                <Text style={[styles.modalTotalText, theme.text]}>Total to Pay:</Text>
+                                <Text style={[styles.modalTotalAmount, theme.text]}>{Math.round(total)} AZN</Text>
                             </View>
 
                             <TouchableOpacity style={styles.payButton} onPress={handlePay} activeOpacity={0.8}>
@@ -320,7 +359,7 @@ const styles = StyleSheet.create({
     },
     itemPrice: {
         fontSize: 14,
-        color: '#D1A3A6',
+        color: '#AD6D71',
         fontWeight: '600',
         marginTop: 4,
         marginBottom: 8,
@@ -382,11 +421,11 @@ const styles = StyleSheet.create({
     },
     totalValue: {
         fontSize: 18,
-        color: '#D1A3A6',
+        color: '#AD6D71',
         fontWeight: '600',
     },
     checkoutButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         borderRadius: 28,
         height: 56,
         justifyContent: 'center',
@@ -485,7 +524,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
     payButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         borderRadius: 28,
         height: 56,
         justifyContent: 'center',
@@ -520,7 +559,7 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     exploreButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         paddingHorizontal: 32,
         height: 56,
         borderRadius: 28,

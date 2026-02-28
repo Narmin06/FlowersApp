@@ -1,5 +1,6 @@
 import { useAppStore } from '@/store/useAppStore';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -12,8 +13,22 @@ export default function SignUpScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSignUp = () => {
+    const handleSignUp = async () => {
+        if (!fullName.trim() || !email.trim() || !password.trim()) {
+            setError('Please fill in all fields');
+            return;
+        }
+        setError('');
+
+        try {
+            const userData = { fullName, email, password };
+            await AsyncStorage.setItem('userData', JSON.stringify(userData));
+        } catch (e) {
+            console.error('Failed to save user data', e);
+        }
+
         if (fullName) {
             setUserName(fullName);
         }
@@ -86,6 +101,8 @@ export default function SignUpScreen() {
                                 </TouchableOpacity>
                             </View>
                         </View>
+
+                        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                         {/* Added extra margin top since there's no "Forgot Password" to push it down */}
                         <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp} activeOpacity={0.8}>
@@ -173,7 +190,7 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     signUpButton: {
-        backgroundColor: '#D1A3A6',
+        backgroundColor: '#AD6D71',
         borderRadius: 28,
         height: 56,
         justifyContent: 'center',
@@ -196,8 +213,14 @@ const styles = StyleSheet.create({
         fontSize: 15,
     },
     signInLink: {
-        color: '#D1A3A6',
+        color: '#AD6D71',
         fontSize: 15,
         fontWeight: '600',
+    },
+    errorText: {
+        color: '#FF3B30',
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 16,
     },
 });

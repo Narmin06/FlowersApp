@@ -28,7 +28,7 @@ export default function ProfileScreen() {
                 {/* User Info Card */}
                 <View style={[styles.userCard, theme.card]}>
                     <View style={styles.avatarContainer}>
-                        <Feather name="user" size={32} color="#D1A3A6" />
+                        <Feather name="user" size={32} color="#AD6D71" />
                     </View>
                     <View style={styles.userInfo}>
                         <Text style={[styles.userName, theme.text]}>{userName}</Text>
@@ -39,7 +39,7 @@ export default function ProfileScreen() {
                 {/* Menu Items */}
                 <TouchableOpacity style={[styles.menuItem, theme.card]} activeOpacity={0.7} onPress={() => router.push('/orders' as any)}>
                     <View style={[styles.iconContainer, theme.cardBackground]}>
-                        <Feather name="shopping-bag" size={20} color="#D1A3A6" />
+                        <Feather name="shopping-bag" size={20} color="#AD6D71" />
                     </View>
                     <View style={styles.menuItemTextContainer}>
                         <Text style={[styles.menuItemTitle, theme.text]}>My Orders</Text>
@@ -50,7 +50,7 @@ export default function ProfileScreen() {
 
                 <TouchableOpacity style={[styles.menuItem, theme.card]} activeOpacity={0.7} onPress={() => router.push('/addresses' as any)}>
                     <View style={[styles.iconContainer, theme.cardBackground]}>
-                        <Feather name="map-pin" size={20} color="#D1A3A6" />
+                        <Feather name="map-pin" size={20} color="#AD6D71" />
                     </View>
                     <View style={styles.menuItemTextContainer}>
                         <Text style={[styles.menuItemTitle, theme.text]}>Addresses</Text>
@@ -61,7 +61,7 @@ export default function ProfileScreen() {
 
                 <TouchableOpacity style={[styles.menuItem, theme.card]} activeOpacity={0.7} onPress={() => router.push('/settings' as any)}>
                     <View style={[styles.iconContainer, theme.cardBackground]}>
-                        <Feather name="settings" size={20} color="#D1A3A6" />
+                        <Feather name="settings" size={20} color="#AD6D71" />
                     </View>
                     <View style={styles.menuItemTextContainer}>
                         <Text style={[styles.menuItemTitle, theme.text]}>Settings</Text>
@@ -81,11 +81,7 @@ export default function ProfileScreen() {
                     </View>
                 </TouchableOpacity>
 
-                {/* Footer */}
-                <View style={[styles.footer, theme.cardBackground]}>
-                    <Text style={[styles.footerText, theme.subText]}>Bloomy v1.0.0</Text>
-                    <Text style={[styles.footerText, theme.subText]}>Made with 🌸 for flower lovers</Text>
-                </View>
+
             </ScrollView>
 
         </SafeAreaView>

@@ -9,19 +9,19 @@ const SLIDES = [
         id: '1',
         title: 'Fresh & Beautiful Flowers',
         description: 'Handpicked flowers delivered to your doorstep',
-        image: require('../assets/images/image.png'), // Temporary placeholder for rose
+        image: require('../assets/images/purple_tulips.jpg'),
     },
     {
         id: '2',
         title: 'Fast Delivery',
         description: 'Same day delivery available in your area',
-        image: require('../assets/images/image.png'), // Temporary placeholder for cake/flowers
+        image: require('../assets/images/pink_lily.jpg'),
     },
     {
         id: '3',
         title: 'Make Someone Happy Today',
         description: 'Perfect gifts for every special occasion',
-        image: require('../assets/images/image.png'), // Temporary placeholder for hyacinths
+        image: require('../assets/images/red_tulips2.jpg'),
     },
 ];
 
@@ -32,7 +32,8 @@ export default function OnboardingScreen() {
 
     const handleNext = () => {
         if (currentIndex < SLIDES.length - 1) {
-            flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+            flatListRef.current?.scrollToOffset({ offset: (currentIndex + 1) * width, animated: true });
+            setCurrentIndex(currentIndex + 1);
         } else {
             router.replace('/sign-in');
         }
@@ -71,7 +72,7 @@ export default function OnboardingScreen() {
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
                 bounces={false}
-                onMomentumScrollEnd={onScroll}
+                onScroll={onScroll}
                 scrollEventThrottle={16}
             />
 
@@ -105,7 +106,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FCF8F9', // Very faint pink background, almost white
+        backgroundColor: '#FCF8F9',
     },
     slide: {
         flex: 1,
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
     },
     activeDot: {
         width: 24, // Wider pill for active dot
-        backgroundColor: '#D1A3A6', // Muted pink
+        backgroundColor: '#AD6D71', // Muted pink
     },
     inactiveDot: {
         width: 6,
@@ -175,13 +176,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#F3E9EA', // Very light border for skip button
+        borderColor: '#F3E9EA',
         borderRadius: 27,
         marginRight: 8,
         backgroundColor: '#FCF8F9',
     },
     skipButtonText: {
-        color: '#150935', // Match title color
+        color: '#150935',
         fontSize: 15,
         fontWeight: '500',
     },
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
         height: 54,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#D1A3A6', // Muted pink filled button
+        backgroundColor: '#AD6D71', // Muted pink filled button
         borderRadius: 27,
         marginLeft: 8,
     },

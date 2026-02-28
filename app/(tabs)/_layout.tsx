@@ -10,7 +10,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#D1A3A6', // Pink color matching the UI
+        tabBarActiveTintColor: '#AD6D71', // Pink color matching the UI
         tabBarInactiveTintColor: '#AA949C', // Gray color
         headerShown: false,
         tabBarStyle: {

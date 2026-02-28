@@ -3,9 +3,7 @@ import { Feather, FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
-const CATEGORIES = ['All', 'Roses', 'Bouquets', 'Birthday', 'Anniversary'];
-
+const CATEGORIES = ['All', 'Roses', 'Bouquets', 'Tulips'];
 export default function HomeScreen() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('All');
@@ -34,7 +32,7 @@ export default function HomeScreen() {
         onPress={() => router.push(`/product/${item.id}` as any)}
       >
         <View style={[styles.imageContainer, theme.cardBackground]}>
-          <Image source={item.image} style={styles.productImage} resizeMode="contain" />
+          <Image source={item.image} style={styles.productImage} resizeMode="cover" />
           <TouchableOpacity
             style={[styles.favoriteButton, theme.card]}
             onPress={() => toggleFavorite(item.id)}
@@ -48,10 +46,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.productInfo}>
-          <View style={styles.deliveryRow}>
-            <Feather name="truck" size={12} color="#1F9939" />
-            <Text style={styles.deliveryText}>Free delivery</Text>
-          </View>
+
           <Text style={[styles.productName, theme.text]} numberOfLines={2}>{item.name}</Text>
 
           <View style={styles.ratingRow}>
@@ -63,7 +58,7 @@ export default function HomeScreen() {
             <Text style={styles.reviewCount}>(45k+)</Text>
           </View>
 
-          <Text style={styles.productPrice}>{item.price}</Text>
+          <Text style={[styles.productPrice, theme.text]}>{item.price}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -71,73 +66,74 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, theme.container]}>
-      {/* Header section is not scrollable with the list, or maybe it is? We will make the whole thing scrollable */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
-        <View style={styles.header}>
+      <FlatList
+        data={displayedProducts}
+        keyExtractor={item => item.id}
+        numColumns={2}
+        renderItem={renderProduct}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        columnWrapperStyle={[styles.row, { paddingHorizontal: 20 }]}
+        ListHeaderComponent={
           <View>
-            <Text style={[styles.welcomeText, theme.subText]}>Welcome back,</Text>
-            <Text style={[styles.userName, theme.text]}>{userName}</Text>
+            <View style={styles.header}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => router.replace('/sign-in')} style={styles.backButton}>
+                  <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} />
+                </TouchableOpacity>
+                <View>
+                  <Text style={[styles.welcomeText, theme.subText]}>Welcome</Text>
+                  <Text style={[styles.userName, theme.text]}>{userName}</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={[styles.searchContainer, theme.cardBackground]}>
+              <Feather name="search" size={20} color={isDarkMode ? '#A0A0A0' : '#AA949C'} style={styles.searchIcon} />
+              <TextInput
+                style={[styles.searchInput, theme.text]}
+                placeholder="Search flowers..."
+                placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+
+            <View style={styles.categoriesContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
+                {CATEGORIES.map((category) => (
+                  <TouchableOpacity
+                    key={category}
+                    style={[
+                      styles.categoryPill,
+                      activeCategory === category
+                        ? styles.categoryPillActive
+                        : [styles.categoryPillInactive, theme.card, { borderColor: isDarkMode ? '#2A2A2A' : '#FCF3F5' }]
+                    ]}
+                    onPress={() => setActiveCategory(category)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        activeCategory === category
+                          ? styles.categoryTextActive
+                          : [styles.categoryTextInactive, theme.text]
+                      ]}
+                    >
+                      {category}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={styles.popularSection}>
+              <Text style={[styles.sectionTitle, theme.text]}>Popular Flowers</Text>
+            </View>
           </View>
-          <TouchableOpacity style={[styles.bellButton, theme.cardBackground]}>
-            <Feather name="bell" size={20} color={isDarkMode ? '#FFFFFF' : '#150935'} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.searchContainer, theme.cardBackground]}>
-          <Feather name="search" size={20} color={isDarkMode ? '#A0A0A0' : '#AA949C'} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, theme.text]}
-            placeholder="Search flowers..."
-            placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        <View style={styles.categoriesContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
-            {CATEGORIES.map((category) => (
-              <TouchableOpacity
-                key={category}
-                style={[
-                  styles.categoryPill,
-                  activeCategory === category
-                    ? styles.categoryPillActive
-                    : [styles.categoryPillInactive, theme.card, { borderColor: isDarkMode ? '#2A2A2A' : '#FCF3F5' }]
-                ]}
-                onPress={() => setActiveCategory(category)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    activeCategory === category
-                      ? styles.categoryTextActive
-                      : [styles.categoryTextInactive, theme.text]
-                  ]}
-                >
-                  {category}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        <View style={styles.popularSection}>
-          <Text style={[styles.sectionTitle, theme.text]}>Popular Flowers</Text>
-
-          <FlatList
-            data={displayedProducts}
-            renderItem={renderProduct}
-            keyExtractor={item => item.id}
-            numColumns={2}
-            scrollEnabled={false} // Since it's inside a ScrollView
-            columnWrapperStyle={styles.row}
-          />
-        </View>
-
-      </ScrollView>
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -180,18 +176,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 4,
   },
+  backButton: {
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   userName: {
     fontSize: 22,
     fontWeight: '600',
     color: '#150935',
-  },
-  bellButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FCF3F5',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -227,7 +220,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryPillActive: {
-    backgroundColor: '#D1A3A6',
+    backgroundColor: '#AD6D71',
   },
   categoryPillInactive: {
     backgroundColor: '#FFFFFF',

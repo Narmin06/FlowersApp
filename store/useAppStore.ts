@@ -12,83 +12,83 @@ export interface Product {
 const PRODUCTS: Product[] = [
     {
         id: '1',
-        name: 'Pink Roses Bouquet',
-        price: '$45',
-        image: require('../assets/images/image.png'),
+        name: 'Pink Roses',
+        price: '60 AZN',
+        image: require('../assets/images/pink_roses.jpg'),
         description: 'A beautiful bouquet of fresh pink roses, perfect for expressing admiration and joy.',
-        categories: ['Roses', 'Bouquets', 'Anniversary']
+        categories: ['Roses', 'Bouquets']
     },
     {
         id: '2',
-        name: 'Lavender Dreams',
-        price: '$38',
-        image: require('../assets/images/image.png'),
-        description: 'Calming lavender arrangements that bring a sense of peace and tranquility.',
-        categories: ['Bouquets']
+        name: 'Yellow Roses',
+        price: '70 AZN',
+        image: require('../assets/images/yellow_rose.jpg'),
+        description: 'Bright and joyful yellow roses, arranged beautifully.',
+        categories: ['Roses', 'Bouquets']
     },
     {
         id: '3',
         name: 'White Tulips',
-        price: '$42',
-        image: require('../assets/images/image.png'),
+        price: '50 AZN',
+        image: require('../assets/images/white_tulips.jpg'),
         description: 'Elegant white tulips symbolizing purity and forgiveness, ideal for new beginnings.',
-        categories: ['Bouquets']
+        categories: ['Bouquets', 'Tulips']
     },
     {
         id: '4',
-        name: 'Sunflower Joy',
-        price: '$35',
-        image: require('../assets/images/image.png'),
-        description: 'Bright and cheerful sunflowers guaranteed to bring a smile to anyone\'s face.',
-        categories: ['Birthday']
+        name: 'Blue Roses',
+        price: '110 AZN',
+        image: require('../assets/images/blue_roses2.jpg'),
+        description: 'Rare and stunning blue roses that mesmerize with their unique beauty.',
+        categories: ['Roses', 'Bouquets']
     },
     {
         id: '5',
-        name: 'Red Velvet Roses',
-        price: '$50',
-        image: require('../assets/images/image.png'),
-        description: 'Classic deep red roses, the ultimate symbol of romantic love and passion.',
-        categories: ['Roses', 'Anniversary']
+        name: 'Pink Tulips',
+        price: '60 AZN',
+        image: require('../assets/images/pink_tulips.jpg'),
+        description: 'Beautiful soft pink tulips, perfectly arranged to bring warmth and happiness.',
+        categories: ['Tulips', 'Bouquets']
     },
     {
         id: '6',
-        name: 'Blush Hydrangeas',
-        price: '$40',
-        image: require('../assets/images/image.png'),
-        description: 'Voluminous blush pink hydrangeas representing heartfelt emotions and gratitude.',
-        categories: ['Birthday', 'Bouquets']
+        name: 'Orchid',
+        price: '75 AZN',
+        image: require('../assets/images/orchid.jpg'),
+        description: 'Exquisite pink orchid plant, a symbol of luxury and exotic beauty.',
+        categories: []
     },
     {
         id: '7',
-        name: 'Vibrant Orchids',
-        price: '$65',
-        image: require('../assets/images/image.png'),
-        description: 'Exotic and vibrant orchids that bring a touch of tropical elegance.',
-        categories: ['Anniversary']
+        name: 'Pink Lily',
+        price: '70 AZN',
+        image: require('../assets/images/pink_lily.jpg'),
+        description: 'A beautiful bouquet featuring stunning pink lilies, perfect for any special occasion.',
+        categories: ['Bouquets']
     },
     {
         id: '8',
-        name: 'Pastel Peonies',
-        price: '$55',
-        image: require('../assets/images/image.png'),
-        description: 'Delicate pastel peonies, perfect for expressing compassion and good fortune.',
-        categories: ['Bouquets', 'Roses']
+        name: 'Purple Tulips',
+        price: '120 AZN',
+        image: require('../assets/images/purple_tulips.jpg'),
+        description: 'Breathtaking purple tulips representing royalty and admiration, an elegant choice.',
+        categories: ['Bouquets', 'Tulips']
     },
     {
         id: '9',
-        name: 'Sunny Daisies',
-        price: '$30',
-        image: require('../assets/images/image.png'),
-        description: 'A cheerful bunch of daisies to brighten up any room instantly.',
-        categories: ['Birthday']
+        name: 'Red Roses',
+        price: '70 AZN',
+        image: require('../assets/images/red_roses.jpg'),
+        description: 'A stunning arrangement of beautiful deep red roses, the ultimate symbol of love and passion.',
+        categories: ['Roses', 'Bouquets']
     },
     {
         id: '10',
-        name: 'Magnificent Lilies',
-        price: '$48',
-        image: require('../assets/images/image.png'),
-        description: 'Striking lilies that make a bold statement, representing rebirth and purity.',
-        categories: ['Bouquets', 'Anniversary']
+        name: 'Red Tulips',
+        price: '80 AZN',
+        image: require('../assets/images/red_tulips2.jpg'),
+        description: 'Brilliant red tulips that signify deep love and affection.',
+        categories: ['Bouquets', 'Tulips']
     }
 ];
 
@@ -104,12 +104,21 @@ export interface Address {
     type: string;
 }
 
+export interface Order {
+    id: string;
+    date: string;
+    status: string;
+    items: number;
+    total: string;
+}
+
 interface AppState {
     userName: string;
     userEmail: string;
-    favorites: string[]; // Store only the IDs of favorite products
+    favorites: string[];
     products: Product[];
     cart: CartItem[];
+    orders: Order[];
     addresses: Address[];
     setUserName: (name: string) => void;
     setUserEmail: (email: string) => void;
@@ -122,6 +131,8 @@ interface AppState {
     addAddress: (address: Address) => void;
     updateAddress: (id: string, updatedAddress: Partial<Address>) => void;
     deleteAddress: (id: string) => void;
+    addOrder: (order: Order) => void;
+    setOrders: (orders: Order[]) => void;
     isDarkMode: boolean;
     toggleDarkMode: (value: boolean) => void;
 }
@@ -149,6 +160,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     favorites: [],
     products: PRODUCTS,
     cart: [],
+    orders: [],
     addresses: INITIAL_ADDRESSES,
     isDarkMode: false,
 
@@ -207,6 +219,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     deleteAddress: (id: string) => set((state) => ({
         addresses: state.addresses.filter(addr => addr.id !== id)
     })),
+
+    addOrder: (order: Order) => set((state) => ({
+        orders: [order, ...state.orders]
+    })),
+
+    setOrders: (orders: Order[]) => set({ orders }),
 
     toggleDarkMode: (value: boolean) => set({ isDarkMode: value })
 }));
