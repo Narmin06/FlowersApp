@@ -79,11 +79,11 @@ export default function HomeScreen() {
             <View style={styles.header}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TouchableOpacity onPress={() => router.replace('/sign-in')} style={styles.backButton}>
-                  <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} />
+                  <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} style={{ marginTop: 2 }} />
                 </TouchableOpacity>
-                <View>
-                  <Text style={[styles.welcomeText, theme.subText]}>Welcome</Text>
-                  <Text style={[styles.userName, theme.text]}>{userName}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={[styles.welcomeText, theme.text, { marginBottom: 0, marginRight: 6, fontSize: 20, fontWeight: '500', color: isDarkMode ? '#FFFFFF' : '#150935' }]}>Welcome</Text>
+                  <Text style={[styles.userName, theme.text, { fontSize: 20 }]}>{userName}</Text>
                 </View>
               </View>
             </View>
@@ -168,6 +168,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: 20,
     marginBottom: 24,
   },
   welcomeText: {
@@ -251,13 +252,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   productCard: {
-    width: '46%', // Slightly smaller width
+    width: '46%',
     backgroundColor: 'transparent',
     marginBottom: 24,
   },
   imageContainer: {
     position: 'relative',
-    aspectRatio: 1, // Kvadrat (square)
+    aspectRatio: 1,
     width: '100%',
     backgroundColor: '#F3E9EA',
     borderRadius: 8,

@@ -121,7 +121,7 @@ export default function SettingsScreen() {
         <SafeAreaView style={[styles.container, theme.container]}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} />
+                    <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} style={{ marginTop: 2 }} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, theme.text]}>Settings</Text>
             </View>
@@ -190,10 +190,8 @@ export default function SettingsScreen() {
                         <Feather name="chevron-right" size={20} color="#AA949C" />
                     </TouchableOpacity>
                 </View>
-
             </ScrollView>
 
-            {/* Edit Profile Modal */}
             <Modal visible={isEditProfileVisible} animationType="slide" transparent={true} onRequestClose={() => setEditProfileVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.modalContent, theme.card]}>
@@ -238,7 +236,6 @@ export default function SettingsScreen() {
                 </View>
             </Modal>
 
-            {/* Change Password Modal */}
             <Modal visible={isChangePasswordVisible} animationType="slide" transparent={true} onRequestClose={() => setChangePasswordVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.modalContent, theme.card]}>
@@ -328,7 +325,6 @@ export default function SettingsScreen() {
                 </View>
             </Modal>
 
-            {/* Contact Us Modal */}
             <Modal visible={isContactVisible} animationType="slide" transparent={true} onRequestClose={() => setContactVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.modalContent, theme.card]}>

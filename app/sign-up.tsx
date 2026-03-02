@@ -20,6 +20,10 @@ export default function SignUpScreen() {
             setError('Please fill in all fields');
             return;
         }
+        if (!email.toLowerCase().includes('@gmail')) {
+            setError('Email must be a @gmail address');
+            return;
+        }
         setError('');
 
         try {
@@ -35,7 +39,6 @@ export default function SignUpScreen() {
         if (email) {
             setUserEmail(email);
         }
-        // Navigate to home after sign up
         router.replace('/(tabs)');
     };
 
@@ -104,7 +107,6 @@ export default function SignUpScreen() {
 
                         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-                        {/* Added extra margin top since there's no "Forgot Password" to push it down */}
                         <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp} activeOpacity={0.8}>
                             <Text style={styles.signUpButtonText}>Create Account</Text>
                         </TouchableOpacity>
@@ -119,7 +121,6 @@ export default function SignUpScreen() {
                         </View>
 
                     </View>
-
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>

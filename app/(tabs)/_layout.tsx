@@ -1,25 +1,25 @@
+import { useAppStore } from '@/store/useAppStore';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Feather } from '@expo/vector-icons';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const isDarkMode = useAppStore(state => state.isDarkMode);
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#AD6D71', // Pink color matching the UI
-        tabBarInactiveTintColor: '#AA949C', // Gray color
+        tabBarActiveTintColor: isDarkMode ? '#FFFFFF' : '#AD6D71',
+        tabBarInactiveTintColor: isDarkMode ? '#A0A0A0' : '#AA949C',
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#FCF3F5',
+          backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
+          borderTopColor: isDarkMode ? '#2A2A2A' : '#FCF3F5',
           height: 80,
           paddingTop: 10,
         },
-        tabBarShowLabel: false, // Hides the title text from the bottom icons
+        tabBarShowLabel: false,
       }}>
       <Tabs.Screen
         name="index"

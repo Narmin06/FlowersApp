@@ -20,6 +20,10 @@ export default function SignInScreen() {
             setError('Please fill in all fields');
             return;
         }
+        if (!email.toLowerCase().includes('@gmail')) {
+            setError('Email must be a @gmail address');
+            return;
+        }
         setError('');
 
         try {
@@ -31,11 +35,9 @@ export default function SignInScreen() {
 
             const savedUser = JSON.parse(savedUserStr);
             if (savedUser.email === email && savedUser.password === password) {
-                // Correct credentials
                 if (savedUser.fullName) setUserName(savedUser.fullName);
                 setUserEmail(savedUser.email);
 
-                // Navigate to home after sign in
                 router.replace('/(tabs)');
             } else {
                 setError('Invalid email or password');
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FCF3F5', // Very faint pink background for input
+        backgroundColor: '#FCF3F5',
         borderWidth: 1,
         borderColor: '#F3E9EA',
         borderRadius: 16,

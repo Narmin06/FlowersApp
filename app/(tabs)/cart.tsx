@@ -1,9 +1,8 @@
 import { useAppStore } from '@/store/useAppStore';
 import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function CartScreen() {
     const router = useRouter();
@@ -16,97 +15,40 @@ export default function CartScreen() {
 
     const theme = isDarkMode ? darkTheme : lightTheme;
 
-    const [isCheckoutModalVisible, setCheckoutModalVisible] = useState(false);
-
-    // Checkout form state
-    const [cardNumber, setCardNumber] = useState('');
-    const [cardName, setCardName] = useState('');
-    const [expiry, setExpiry] = useState('');
-    const [cvv, setCvv] = useState('');
+    const handleCheckoutPress = () => {
+        router.push('/checkout-date');
+    };
 
     const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.price.replace('$', '')) * item.quantity), 0);
     const delivery = subtotal > 0 ? 5.00 : 0.00;
     const total = subtotal + delivery;
 
-    const openCheckoutModal = async () => {
-        try {
-            const dataStr = await AsyncStorage.getItem('userData');
-            if (dataStr) {
-                const data = JSON.parse(dataStr);
-                if (data.fullName) setCardName(data.fullName);
-            }
-        } catch (e) {
-            console.error('Failed to get user data', e);
-        }
-        setCheckoutModalVisible(true);
-    };
-
-    const handlePay = async () => {
-        if (!cardNumber || !cardName || !expiry || !cvv) {
-            Alert.alert("Error", "Please fill in all card details.");
-            return;
-        }
-
-        const orderItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-        const newOrder = {
-            id: `ORD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-            date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-            status: 'Delivered',
-            items: orderItemsCount,
-            total: `${Math.round(total)} AZN`
-        };
-
-        addOrder(newOrder);
-
-        try {
-            const dataStr = await AsyncStorage.getItem('userData');
-            let data = dataStr ? JSON.parse(dataStr) : {};
-            const existingOrders = data.orders || [];
-            data.orders = [newOrder, ...existingOrders];
-            await AsyncStorage.setItem('userData', JSON.stringify(data));
-        } catch (error) {
-            console.error('Failed to save order history', error);
-        }
-
-        // Process payment mock
-        setCheckoutModalVisible(false);
-        clearCart();
-
-        // Reset form
-        setCardNumber('');
-        setCardName('');
-        setExpiry('');
-        setCvv('');
-
-        Alert.alert("Success", "Payment processed successfully! Your flowers are on the way. 🎉");
-    };
-
     return (
         <SafeAreaView style={[styles.container, theme.container]}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
-                    <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} />
+                    <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} style={{ marginTop: 2 }} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, theme.text]}>My Cart</Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                {cartItems.length === 0 ? (
-                    <View style={styles.emptyContainer}>
-                        <Feather name="shopping-bag" size={64} color={isDarkMode ? '#2A2A2A' : '#F3E9EA'} style={styles.emptyIcon} />
-                        <Text style={[styles.emptyTitle, theme.text]}>Your Cart is Empty</Text>
-                        <Text style={[styles.emptySubtitle, theme.subText]}>
-                            Looks like you haven't added anything to your cart yet.
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.exploreButton}
-                            onPress={() => router.push('/(tabs)')}
-                        >
-                            <Text style={styles.exploreButtonText}>Explore Flowers</Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : (
-                    cartItems.map((item) => (
+            {cartItems.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <Feather name="shopping-bag" size={64} color={isDarkMode ? '#2A2A2A' : '#F3E9EA'} style={styles.emptyIcon} />
+                    <Text style={[styles.emptyTitle, theme.text]}>Your Cart is Empty</Text>
+                    <Text style={[styles.emptySubtitle, theme.subText]}>
+                        Looks like you haven't added anything to your cart yet.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.exploreButton}
+                        onPress={() => router.push('/(tabs)')}
+                    >
+                        <Text style={styles.exploreButtonText}>Explore Flowers</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                    {cartItems.map((item) => (
                         <View key={item.id} style={[styles.cartItem, theme.card]}>
                             <View style={[styles.imageContainer, theme.cardBackground]}>
                                 <Image source={item.image} style={styles.itemImage} resizeMode="contain" />
@@ -141,9 +83,9 @@ export default function CartScreen() {
                                 </View>
                             </View>
                         </View>
-                    ))
-                )}
-            </ScrollView>
+                    ))}
+                </ScrollView>
+            )}
 
             {cartItems.length > 0 && (
                 <View style={[styles.footer, theme.card]}>
@@ -165,109 +107,12 @@ export default function CartScreen() {
                         style={[styles.checkoutButton, cartItems.length === 0 && styles.checkoutButtonDisabled]}
                         activeOpacity={0.8}
                         disabled={cartItems.length === 0}
-                        onPress={openCheckoutModal}
+                        onPress={handleCheckoutPress}
                     >
                         <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
                     </TouchableOpacity>
                 </View>
             )}
-
-
-            {/* Checkout Modal */}
-            <Modal
-                visible={isCheckoutModalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => setCheckoutModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        style={[styles.modalContent, theme.card]}
-                    >
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, theme.text]}>Checkout Details</Text>
-                            <TouchableOpacity onPress={() => setCheckoutModalVisible(false)} style={styles.closeModalButton}>
-                                <Feather name="x" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView contentContainerStyle={styles.modalForm} showsVerticalScrollIndicator={false}>
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, theme.text]}>Card Number</Text>
-                                <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F3E9EA' }]}>
-                                    <Feather name="credit-card" size={20} color="#AA949C" style={styles.inputIcon} />
-                                    <TextInput
-                                        style={[styles.input, theme.text]}
-                                        placeholder="0000 0000 0000 0000"
-                                        placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
-                                        keyboardType="numeric"
-                                        maxLength={19}
-                                        value={cardNumber}
-                                        onChangeText={setCardNumber}
-                                    />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, theme.text]}>Cardholder Name</Text>
-                                <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F3E9EA' }]}>
-                                    <Feather name="user" size={20} color="#AA949C" style={styles.inputIcon} />
-                                    <TextInput
-                                        style={[styles.input, theme.text]}
-                                        placeholder="Your Name"
-                                        placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
-                                        autoCapitalize="words"
-                                        value={cardName}
-                                        onChangeText={setCardName}
-                                    />
-                                </View>
-                            </View>
-
-                            <View style={styles.rowInputs}>
-                                <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                                    <Text style={[styles.label, theme.text]}>Expiry Date</Text>
-                                    <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F3E9EA' }]}>
-                                        <TextInput
-                                            style={[styles.input, theme.text]}
-                                            placeholder="MM/YY"
-                                            placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
-                                            maxLength={5}
-                                            value={expiry}
-                                            onChangeText={setExpiry}
-                                        />
-                                    </View>
-                                </View>
-
-                                <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-                                    <Text style={[styles.label, theme.text]}>CVV</Text>
-                                    <View style={[styles.inputContainer, { backgroundColor: isDarkMode ? '#1E1E1E' : '#F3E9EA' }]}>
-                                        <TextInput
-                                            style={[styles.input, theme.text]}
-                                            placeholder="123"
-                                            placeholderTextColor={isDarkMode ? '#A0A0A0' : '#AA949C'}
-                                            keyboardType="numeric"
-                                            maxLength={4}
-                                            value={cvv}
-                                            onChangeText={setCvv}
-                                            secureTextEntry
-                                        />
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View style={styles.modalTotalContainer}>
-                                <Text style={[styles.modalTotalText, theme.text]}>Total to Pay:</Text>
-                                <Text style={[styles.modalTotalAmount, theme.text]}>{Math.round(total)} AZN</Text>
-                            </View>
-
-                            <TouchableOpacity style={styles.payButton} onPress={handlePay} activeOpacity={0.8}>
-                                <Text style={styles.payButtonText}>Pay Now</Text>
-                            </TouchableOpacity>
-                        </ScrollView>
-                    </KeyboardAvoidingView>
-                </View>
-            </Modal>
         </SafeAreaView>
     );
 }
@@ -386,7 +231,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         paddingHorizontal: 24,
         paddingTop: 24,
-        paddingBottom: 32, // Accommodate tab bar if needed, or safe area
+        paddingBottom: 32,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         shadowColor: "#000",
@@ -432,14 +277,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     checkoutButtonDisabled: {
-        backgroundColor: '#E0CCD0', // Lighter shade to indicate disabled
+        backgroundColor: '#E0CCD0',
     },
     checkoutButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '600',
     },
-    // Modal Styles
+
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -540,7 +385,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 40,
-        paddingTop: 80,
     },
     emptyIcon: {
         marginBottom: 24,
@@ -575,5 +419,11 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#F3E9EA',
         marginVertical: 16,
+    },
+    errorText: {
+        color: '#FF3B30',
+        fontSize: 12,
+        marginTop: 6,
+        marginLeft: 4,
     },
 });

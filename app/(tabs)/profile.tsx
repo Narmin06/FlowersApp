@@ -13,7 +13,6 @@ export default function ProfileScreen() {
     const theme = isDarkMode ? darkTheme : lightTheme;
 
     const handleLogout = () => {
-        // Navigate back to sign in
         router.replace('/sign-in');
     };
 
@@ -25,7 +24,6 @@ export default function ProfileScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-                {/* User Info Card */}
                 <View style={[styles.userCard, theme.card]}>
                     <View style={styles.avatarContainer}>
                         <Feather name="user" size={32} color="#AD6D71" />
@@ -36,7 +34,6 @@ export default function ProfileScreen() {
                     </View>
                 </View>
 
-                {/* Menu Items */}
                 <TouchableOpacity style={[styles.menuItem, theme.card]} activeOpacity={0.7} onPress={() => router.push('/orders' as any)}>
                     <View style={[styles.iconContainer, theme.cardBackground]}>
                         <Feather name="shopping-bag" size={20} color="#AD6D71" />
@@ -44,6 +41,17 @@ export default function ProfileScreen() {
                     <View style={styles.menuItemTextContainer}>
                         <Text style={[styles.menuItemTitle, theme.text]}>My Orders</Text>
                         <Text style={[styles.menuItemSubtitle, theme.subText]}>View your order history</Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color={isDarkMode ? '#A0A0A0' : '#AA949C'} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.menuItem, theme.card]} activeOpacity={0.7} onPress={() => router.push('/notifications' as any)}>
+                    <View style={[styles.iconContainer, theme.cardBackground]}>
+                        <Feather name="bell" size={20} color="#AD6D71" />
+                    </View>
+                    <View style={styles.menuItemTextContainer}>
+                        <Text style={[styles.menuItemTitle, theme.text]}>Notifications</Text>
+                        <Text style={[styles.menuItemSubtitle, theme.subText]}>View recent notifications</Text>
                     </View>
                     <Feather name="chevron-right" size={20} color={isDarkMode ? '#A0A0A0' : '#AA949C'} />
                 </TouchableOpacity>
@@ -70,7 +78,6 @@ export default function ProfileScreen() {
                     <Feather name="chevron-right" size={20} color={isDarkMode ? '#A0A0A0' : '#AA949C'} />
                 </TouchableOpacity>
 
-                {/* Logout Item */}
                 <TouchableOpacity style={[styles.menuItem, styles.logoutItem, theme.card, { borderColor: isDarkMode ? '#2A2A2A' : '#FFF0F1' }]} activeOpacity={0.7} onPress={handleLogout}>
                     <View style={[styles.iconContainer, styles.logoutIconContainer]}>
                         <Feather name="log-out" size={20} color="#D85C66" />
@@ -80,10 +87,7 @@ export default function ProfileScreen() {
                         <Text style={[styles.menuItemSubtitle, theme.subText]}>Sign out of your account</Text>
                     </View>
                 </TouchableOpacity>
-
-
             </ScrollView>
-
         </SafeAreaView>
     );
 }
@@ -145,7 +149,7 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: '#F3E4FC', // Light purple
+        backgroundColor: '#F3E4FC',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
     logoutTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#D85C66', // Reddish color for logout
+        color: '#D85C66',
         marginBottom: 2,
     },
     footer: {

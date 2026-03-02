@@ -4,6 +4,13 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import {
+  configureNotificationHandler,
+  registerForPushNotifications,
+  removeNotificationListeners,
+  setupNotificationListeners
+} from '@/services/push-service';
+import { useEffect } from 'react';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -11,6 +18,16 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    configureNotificationHandler();
+    registerForPushNotifications();
+    setupNotificationListeners();
+
+    return () => {
+      removeNotificationListeners();
+    };
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

@@ -60,7 +60,7 @@ export default function FavoritesScreen() {
         <SafeAreaView style={[styles.container, theme.container]}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
-                    <Feather name="arrow-left" size={24} color={theme.text.color} />
+                    <Feather name="arrow-left" size={24} color={theme.text.color} style={{ marginTop: 2 }} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, theme.text]}>My Favorites</Text>
             </View>
@@ -86,7 +86,7 @@ export default function FavoritesScreen() {
                         style={styles.exploreButton}
                         onPress={() => router.push('/(tabs)')}
                     >
-                        <Text style={styles.exploreButtonText}>Explore Products</Text>
+                        <Text style={styles.exploreButtonText}>Explore Flowers</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -139,13 +139,13 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     productCard: {
-        width: '46%', // Slightly smaller width
+        width: '46%',
         backgroundColor: 'transparent',
         marginBottom: 24,
     },
     imageContainer: {
         position: 'relative',
-        aspectRatio: 1, // Kvadrat (square)
+        aspectRatio: 1,
         width: '100%',
         backgroundColor: '#F3E9EA',
         borderRadius: 8,
@@ -170,9 +170,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
-    },
-    heartActive: {
-        // Red color set directly in component for active state
     },
     productInfo: {
         paddingTop: 8,

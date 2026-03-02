@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useAppStore } from '@/store/useAppStore';
 
@@ -28,15 +28,52 @@ export default function OrdersScreen() {
             }
         };
         fetchOrders();
+        fetchOrders();
     }, []);
+
+    const handleClearOrders = async () => {
+        const confirmClear = () => {
+            setOrders([]);
+            AsyncStorage.getItem('userData').then(dataStr => {
+                if (dataStr) {
+                    const data = JSON.parse(dataStr);
+                    data.orders = [];
+                    AsyncStorage.setItem('userData', JSON.stringify(data));
+                }
+            });
+        };
+
+        if (Platform.OS === 'web') {
+            if (window.confirm("Are you sure you want to clear your order history?")) {
+                confirmClear();
+            }
+        } else {
+            Alert.alert(
+                "Clear Orders",
+                "Are you sure you want to clear your order history?",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Yes", style: "destructive", onPress: confirmClear }
+                ]
+            );
+        }
+    };
 
     return (
         <SafeAreaView style={[styles.container, theme.container]}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} />
-                </TouchableOpacity>
-                <Text style={[styles.headerTitle, theme.text]}>My Orders</Text>
+            <View style={[styles.header, { justifyContent: 'space-between' }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} style={{ marginTop: 2 }} />
+                    </TouchableOpacity>
+                    <Text style={[styles.headerTitle, theme.text]}>My Orders</Text>
+                </View>
+
+                {orders.length > 0 && (
+                    <TouchableOpacity onPress={handleClearOrders} style={styles.clearButton} activeOpacity={0.7}>
+                        <Feather name="trash-2" size={20} color="#AD6D71" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -56,11 +93,11 @@ export default function OrdersScreen() {
                                 <Text style={[styles.orderId, theme.text]}>{order.id}</Text>
                                 <View style={[
                                     styles.statusBadge,
-                                    order.status === 'Delivered' ? styles.statusDelivered : styles.statusCancelled
+                                    order.status === 'On the way' || order.status === 'Delivered' ? styles.statusDelivered : styles.statusCancelled
                                 ]}>
                                     <Text style={[
                                         styles.statusText,
-                                        order.status === 'Delivered' ? styles.statusTextDelivered : styles.statusTextCancelled
+                                        order.status === 'On the way' || order.status === 'Delivered' ? styles.statusTextDelivered : styles.statusTextCancelled
                                     ]}>{order.status}</Text>
                                 </View>
                             </View>
@@ -82,7 +119,7 @@ export default function OrdersScreen() {
 
                             <TouchableOpacity style={styles.actionButton}>
                                 <Text style={styles.actionButtonText}>
-                                    {order.status === 'Delivered' ? 'Reorder' : 'View Details'}
+                                    {order.status === 'On the way' || order.status === 'Delivered' ? 'Reorder' : 'View Details'}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -127,6 +164,9 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '600',
         color: '#150935',
+    },
+    clearButton: {
+        padding: 4,
     },
     scrollContent: {
         paddingHorizontal: 20,

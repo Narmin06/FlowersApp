@@ -135,6 +135,14 @@ interface AppState {
     setOrders: (orders: Order[]) => void;
     isDarkMode: boolean;
     toggleDarkMode: (value: boolean) => void;
+
+    // Checkout Flow States
+    checkoutDate: string | null;
+    checkoutTime: string | null;
+    checkoutAddressId: string | null;
+    setCheckoutDate: (date: string | null) => void;
+    setCheckoutTime: (time: string | null) => void;
+    setCheckoutAddressId: (id: string | null) => void;
 }
 
 const INITIAL_ADDRESSES: Address[] = [
@@ -144,13 +152,6 @@ const INITIAL_ADDRESSES: Address[] = [
         address: '123 Flower Street, Bloomingdale, NY 10001',
         isDefault: true,
         type: 'home',
-    },
-    {
-        id: '2',
-        title: 'Office',
-        address: '456 Tech Avenue, Future City, NY 10002',
-        isDefault: false,
-        type: 'briefcase',
     }
 ];
 
@@ -163,9 +164,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     orders: [],
     addresses: INITIAL_ADDRESSES,
     isDarkMode: false,
+    checkoutDate: null,
+    checkoutTime: null,
+    checkoutAddressId: null,
 
     setUserName: (name: string) => set({ userName: name }),
     setUserEmail: (email: string) => set({ userEmail: email }),
+    setCheckoutDate: (date: string | null) => set({ checkoutDate: date }),
+    setCheckoutTime: (time: string | null) => set({ checkoutTime: time }),
+    setCheckoutAddressId: (id: string | null) => set({ checkoutAddressId: id }),
 
     toggleFavorite: (id: string) => set((state) => {
         const isCurrentlyFavorite = state.favorites.includes(id);

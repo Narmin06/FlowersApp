@@ -71,7 +71,7 @@ export default function AddressesScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Feather name="arrow-left" size={24} color="#150935" />
+                    <Feather name="arrow-left" size={24} color="#150935" style={{ marginTop: 2 }} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Saved Addresses</Text>
             </View>
@@ -86,11 +86,6 @@ export default function AddressesScreen() {
                         <View style={styles.addressInfo}>
                             <View style={styles.titleRow}>
                                 <Text style={styles.addressTitle}>{item.title}</Text>
-                                {item.isDefault && (
-                                    <View style={styles.defaultBadge}>
-                                        <Text style={styles.defaultText}>Default</Text>
-                                    </View>
-                                )}
                             </View>
                             <Text style={styles.addressText}>{item.address}</Text>
                         </View>
