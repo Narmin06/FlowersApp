@@ -1,8 +1,7 @@
 import { useAppStore } from '@/store/useAppStore';
+import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { Feather } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const isDarkMode = useAppStore(state => state.isDarkMode);

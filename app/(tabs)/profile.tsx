@@ -1,5 +1,6 @@
 import { useAppStore } from '@/store/useAppStore';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -11,6 +12,26 @@ export default function ProfileScreen() {
     const isDarkMode = useAppStore(state => state.isDarkMode);
 
     const theme = isDarkMode ? darkTheme : lightTheme;
+
+    React.useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                const dataStr = await AsyncStorage.getItem('userData');
+                if (dataStr) {
+                    const data = JSON.parse(dataStr);
+                    if (data.fullName && userName === 'Guest') {
+                        useAppStore.getState().setUserName(data.fullName);
+                    }
+                    if (data.email && userEmail === 'guest@bloomy.com') {
+                        useAppStore.getState().setUserEmail(data.email);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load user data', e);
+            }
+        };
+        loadUserData();
+    }, [userName, userEmail]);
 
     const handleLogout = () => {
         router.replace('/sign-in');

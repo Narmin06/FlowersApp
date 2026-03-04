@@ -22,9 +22,6 @@ export default function CheckoutAddressScreen() {
     return (
         <SafeAreaView style={[styles.container, theme.container]}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Feather name="arrow-left" size={24} color={theme.text.color} style={{ marginTop: 2 }} />
-                </TouchableOpacity>
                 <Text style={[styles.headerTitle, theme.text]}>Delivery Address</Text>
             </View>
 
@@ -126,7 +123,6 @@ const styles = StyleSheet.create({
         paddingTop: 16,
         paddingBottom: 24,
     },
-    backButton: { marginRight: 16 },
     headerTitle: { fontSize: 20, fontWeight: '600' },
     content: { padding: 20 },
     addressCard: {

@@ -6,8 +6,10 @@ import * as Device from "expo-device";
 import * as Location from "expo-location";
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dimensions, KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function CheckoutOverviewScreen() {
     const router = useRouter();
@@ -29,8 +31,13 @@ export default function CheckoutOverviewScreen() {
     const total = subtotal + delivery;
 
     const [isCheckoutModalVisible, setCheckoutModalVisible] = useState(false);
+    const [isFullScreenMapVisible, setFullScreenMapVisible] = useState(false);
     const [mapRegion, setMapRegion] = useState<any | null>(null);
     const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
+    const [markerCoord, setMarkerCoord] = useState<any>(null);
+
+    const mapRef = useRef<any>(null);
+    const fullScreenMapRef = useRef<any>(null);
 
     useEffect(() => {
         async function getCurrentLocation() {
@@ -44,15 +51,83 @@ export default function CheckoutOverviewScreen() {
 
             let location = await Location.getCurrentPositionAsync({});
             setUserLocation(location);
-            setMapRegion({
+
+            const region = {
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
                 latitudeDelta: 0.01,
                 longitudeDelta: 0.01,
+            };
+            setMapRegion(region);
+            setMarkerCoord({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
             });
         }
         getCurrentLocation();
     }, []);
+
+    useEffect(() => {
+        if (Platform.OS !== 'web') return;
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data && event.data.type === 'LOCATION_CHANGED') {
+                if (markerCoord) {
+                    setMarkerCoord({
+                        latitude: event.data.latitude,
+                        longitude: event.data.longitude
+                    });
+                }
+            }
+        };
+        window.addEventListener('message', handleMessage as any);
+        return () => window.removeEventListener('message', handleMessage as any);
+    }, [markerCoord]);
+
+    const handleZoomIn = () => {
+        const delta = 2;
+        setMapRegion((prev: any) => {
+            if (!prev) return prev;
+            const newRegion = {
+                ...prev,
+                latitudeDelta: prev.latitudeDelta / delta,
+                longitudeDelta: prev.longitudeDelta / delta,
+            };
+            fullScreenMapRef.current?.animateToRegion(newRegion, 300);
+            return newRegion;
+        });
+    };
+
+    const handleZoomOut = () => {
+        const delta = 2;
+        setMapRegion((prev: any) => {
+            if (!prev) return prev;
+            const newRegion = {
+                ...prev,
+                latitudeDelta: prev.latitudeDelta * delta,
+                longitudeDelta: prev.longitudeDelta * delta,
+            };
+            fullScreenMapRef.current?.animateToRegion(newRegion, 300);
+            return newRegion;
+        });
+    };
+
+    const jumpToUserLocation = () => {
+        if (userLocation) {
+            const newRegion = {
+                latitude: userLocation.coords.latitude,
+                longitude: userLocation.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            };
+            setMapRegion(newRegion);
+            setMarkerCoord({
+                latitude: userLocation.coords.latitude,
+                longitude: userLocation.coords.longitude,
+            });
+            fullScreenMapRef.current?.animateToRegion(newRegion, 300);
+        }
+    };
+
     const [cardNumber, setCardNumber] = useState('');
     const [cardName, setCardName] = useState('');
     const [expiry, setExpiry] = useState('');
@@ -97,8 +172,8 @@ export default function CheckoutOverviewScreen() {
 
         if (!cvv) {
             newErrors.cvv = "Enter CVV.";
-        } else if (cvv.includes('-') || cvv.length < 3) {
-            newErrors.cvv = "Enter a valid CVV.";
+        } else if (!/^\d{3}$/.test(cvv)) {
+            newErrors.cvv = "CVV must be exactly 3 digits.";
         }
 
         if (Object.keys(newErrors).length > 0) {
@@ -132,7 +207,6 @@ export default function CheckoutOverviewScreen() {
         setCheckoutModalVisible(false);
         clearCart();
 
-        // Trigger local notification only on native platforms
         if (Platform.OS !== 'web') {
             await Notifications.scheduleNotificationAsync({
                 content: {
@@ -147,7 +221,6 @@ export default function CheckoutOverviewScreen() {
                 },
             });
         } else {
-            // For web fallback, add directly to storage so history is still updated
             try {
                 const historyJson = await AsyncStorage.getItem('notification_history');
                 const history = historyJson ? JSON.parse(historyJson) : [];
@@ -167,6 +240,88 @@ export default function CheckoutOverviewScreen() {
         router.replace('/(tabs)');
     };
 
+    const webLat = markerCoord?.latitude || userLocation?.coords.latitude || 40.409264;
+    const webLng = markerCoord?.longitude || userLocation?.coords.longitude || 49.867092;
+
+    const mapHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <style>
+              body { padding: 0; margin: 0; }
+              #map { width: 100vw; height: 100vh; }
+              
+              /* Reposition defaults */
+              .leaflet-top.leaflet-left {
+                  display: flex;
+                  flex-direction: row;
+                  padding: 10px;
+                  margin-top: 10px;
+              }
+              .leaflet-control-zoom {
+                  display: flex;
+                  flex-direction: row;
+                  border: none !important;
+                  margin: 0 !important;
+              }
+              .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+                  width: 36px !important;
+                  height: 36px !important;
+                  line-height: 36px !important;
+                  box-sizing: border-box;
+                  border-radius: 8px !important;
+                  margin-right: 8px !important;
+                  border: 1px solid #ccc !important;
+                  background-color: white !important;
+                  color: black !important;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  font-weight: bold;
+              }
+          </style>
+      </head>
+      <body>
+          <div id="map"></div>
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <script>
+              var map = L.map('map', {
+                  zoomControl: false 
+              }).setView([${webLat}, ${webLng}], 15);
+              
+              L.control.zoom({
+                  position: 'topleft'
+              }).addTo(map);
+
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                  attribution: '&copy; OpenStreetMap contributors'
+              }).addTo(map);
+
+              var myIcon = L.icon({
+                  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                  iconSize: [25, 41],
+                  iconAnchor: [12, 41],
+                  popupAnchor: [1, -34],
+                  shadowSize: [41, 41]
+              });
+
+              var marker = L.marker([${webLat}, ${webLng}], { draggable: true, icon: myIcon }).addTo(map);
+              
+              marker.on('dragend', function(event) {
+                  var position = marker.getLatLng();
+                  window.parent.postMessage({
+                      type: 'LOCATION_CHANGED',
+                      latitude: position.lat,
+                      longitude: position.lng
+                  }, '*');
+              });
+          </script>
+      </body>
+      </html>
+    `;
+
     return (
         <SafeAreaView style={[styles.container, theme.container]}>
             <View style={styles.header}>
@@ -174,12 +329,22 @@ export default function CheckoutOverviewScreen() {
                     <Feather name="arrow-left" size={24} color={isDarkMode ? '#FFFFFF' : '#150935'} style={{ marginTop: 2 }} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, theme.text]}>Overview</Text>
+
+                {/* Map Icon on Top Right */}
+                <TouchableOpacity
+                    style={styles.headerMapIcon}
+                    onPress={() => setFullScreenMapVisible(true)}
+                    activeOpacity={0.7}
+                >
+                    <Feather name="map" size={24} color={theme.text.color} style={{ marginTop: 2 }} />
+                </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
                 <View style={[styles.mapContainer, theme.card]}>
                     <MapView
+                        ref={mapRef}
                         style={styles.map}
                         provider={PROVIDER_GOOGLE}
                         region={mapRegion}
@@ -187,15 +352,15 @@ export default function CheckoutOverviewScreen() {
                         showsMyLocationButton
                         showsCompass
                     >
-                        {userLocation && (
+                        {markerCoord && (
                             <Marker
                                 coordinate={{
-                                    latitude: userLocation.coords.latitude,
-                                    longitude: userLocation.coords.longitude,
+                                    latitude: markerCoord.latitude,
+                                    longitude: markerCoord.longitude,
                                 }}
-                                title="Your Location"
+                                title="Selected Location"
                                 description="Delivery location"
-                                pinColor="#AD6D71"
+                                pinColor="red"
                             />
                         )}
                     </MapView>
@@ -355,6 +520,98 @@ export default function CheckoutOverviewScreen() {
                     </KeyboardAvoidingView>
                 </View>
             </Modal>
+
+            {/* Full Screen Map Modal */}
+            <Modal
+                visible={isFullScreenMapVisible}
+                animationType="slide"
+                transparent={false}
+                onRequestClose={() => setFullScreenMapVisible(false)}
+            >
+                <View style={styles.fullScreenMapContainer}>
+                    {Platform.OS === 'web' ? (
+                        <>
+                            {/* @ts-ignore */}
+                            <iframe
+                                srcDoc={mapHtml}
+                                style={{ width: "100%", height: "100%", border: 0 }}
+                                allowFullScreen={true}
+                                loading="lazy"
+                            />
+
+                            <TouchableOpacity style={[styles.mapButton, { position: 'absolute', top: 70, left: 110, zIndex: 10 }]} onPress={() => setFullScreenMapVisible(false)} activeOpacity={0.8}>
+                                <Feather name="chevron-left" size={24} color="#000000" />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.locationButton} onPress={jumpToUserLocation} activeOpacity={0.8}>
+                                <Feather name="navigation" size={24} color="#000000" />
+                            </TouchableOpacity>
+                        </>
+                    ) : (
+                        <>
+                            <MapView
+                                ref={fullScreenMapRef}
+                                style={styles.fullScreenMap}
+                                provider={PROVIDER_GOOGLE}
+                                region={mapRegion}
+                                showsUserLocation={false}
+                                showsMyLocationButton={false}
+                                showsCompass={false}
+                            >
+                                {markerCoord && (
+                                    <Marker
+                                        coordinate={{
+                                            latitude: markerCoord.latitude,
+                                            longitude: markerCoord.longitude,
+                                        }}
+                                        title="Selected Location"
+                                        description="Drag to move location"
+                                        pinColor="red"
+                                        draggable
+                                        onDragEnd={(e) => {
+                                            setMarkerCoord(e.nativeEvent.coordinate);
+                                            if (mapRef.current) {
+                                                mapRef.current.animateToRegion({
+                                                    latitude: e.nativeEvent.coordinate.latitude,
+                                                    longitude: e.nativeEvent.coordinate.longitude,
+                                                    latitudeDelta: 0.01,
+                                                    longitudeDelta: 0.01,
+                                                });
+                                            }
+                                            setMapRegion({
+                                                latitude: e.nativeEvent.coordinate.latitude,
+                                                longitude: e.nativeEvent.coordinate.longitude,
+                                                latitudeDelta: 0.01,
+                                                longitudeDelta: 0.01,
+                                            });
+                                        }}
+                                    />
+                                )}
+                            </MapView>
+
+                            {/* Fixed Zoom Controls on Map */}
+                            <View style={styles.zoomControls}>
+                                <View style={styles.zoomButtonsRow}>
+                                    <TouchableOpacity style={styles.mapSmallButton} onPress={handleZoomIn} activeOpacity={0.8}>
+                                        <Feather name="plus" size={20} color="#000000" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.mapSmallButton} onPress={handleZoomOut} activeOpacity={0.8}>
+                                        <Feather name="minus" size={20} color="#000000" />
+                                    </TouchableOpacity>
+                                </View>
+                                <TouchableOpacity style={[styles.mapButton, { marginTop: 12 }]} onPress={() => setFullScreenMapVisible(false)} activeOpacity={0.8}>
+                                    <Feather name="chevron-left" size={24} color="#000000" />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Location Navigation Button on the Right */}
+                            <TouchableOpacity style={styles.locationButton} onPress={jumpToUserLocation} activeOpacity={0.8}>
+                                <Feather name="navigation" size={24} color="#000000" />
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -385,7 +642,11 @@ const styles = StyleSheet.create({
         paddingBottom: 24,
     },
     backButton: { marginRight: 16 },
-    headerTitle: { fontSize: 20, fontWeight: '600' },
+    headerTitle: { fontSize: 20, fontWeight: '600', flex: 1 },
+    headerMapIcon: {
+        marginLeft: 'auto',
+        padding: 4,
+    },
     content: { padding: 20, paddingBottom: 100 },
     mapContainer: {
         height: 180,
@@ -494,7 +755,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    // Modal Styles copied and maintained
+    // Modal Styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -591,4 +852,67 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
+
+    // Full Screen Map Styles
+    fullScreenMapContainer: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    fullScreenMap: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    zoomControls: {
+        position: 'absolute',
+        top: 60,
+        left: 20,
+        zIndex: 10,
+    },
+    zoomButtonsRow: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    mapButton: {
+        width: 48,
+        height: 48,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    mapSmallButton: {
+        width: 36,
+        height: 36,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    locationButton: {
+        position: 'absolute',
+        top: 60,
+        right: 20,
+        width: 48,
+        height: 48,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 5,
+        zIndex: 10,
+    },
 });
+

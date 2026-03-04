@@ -2,7 +2,8 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAppStore } from '@/store/useAppStore';
 
@@ -27,7 +28,6 @@ export default function OrdersScreen() {
                 console.error('Error fetching orders from storage:', error);
             }
         };
-        fetchOrders();
         fetchOrders();
     }, []);
 

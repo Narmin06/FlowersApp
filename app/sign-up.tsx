@@ -12,7 +12,7 @@ import { z } from 'zod';
 const signUpSchema = z.object({
     fullName: z.string().min(1, 'Please fill in all fields'),
     email: z.string().min(1, 'Please fill in all fields').refine(val => val.toLowerCase().includes('@gmail'), 'Email must be a @gmail address'),
-    password: z.string().min(1, 'Please fill in all fields'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;

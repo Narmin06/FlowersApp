@@ -136,7 +136,6 @@ interface AppState {
     isDarkMode: boolean;
     toggleDarkMode: (value: boolean) => void;
 
-    // Checkout Flow States
     checkoutDate: string | null;
     checkoutTime: string | null;
     checkoutAddressId: string | null;
